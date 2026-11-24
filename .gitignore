@@ -25,3 +25,22 @@ dist-ssr
 
 # Personal exports
 fitlog-backup-*.json
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite*
+*.db-*
+*.dump
+*.sql
+/backups/
+/exports/
+/dumps/
+/data-local/
+*workout*export*.json
+*fitlog*export*.json
+*fitlog*dump*.json

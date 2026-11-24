@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Activity, CalendarDays, ChartNoAxesColumnIncreasing, ChevronRight, ClipboardList,
-  Copy, DatabaseBackup, Dumbbell, Flame, Plus, Salad, Utensils,
+  CalendarDays, ChartNoAxesColumnIncreasing, ChevronRight, ClipboardList,
+  Copy, DatabaseBackup, Dumbbell, Plus, Salad, Sparkles, Utensils,
 } from 'lucide-react'
 import { BackupScreen } from './components/BackupScreen'
 import { WorkoutEditor } from './components/WorkoutEditor'
@@ -89,7 +89,7 @@ export default function App() {
           setStarting(false)
           setTab('Workouts')
           window.scrollTo(0, 0)
-        }}><span className="brand-icon"><Activity size={23} strokeWidth={2.5} /></span> FitLog</button>
+        }}>FitLog</button>
         {data && tab === 'Workouts' && !editor.draft && !backup &&
           <button className="icon-button data-button" aria-label="Data and backup" title="Data & Backup"
             onClick={() => setBackup(true)}><DatabaseBackup size={21} /></button>}
@@ -101,7 +101,9 @@ export default function App() {
         <button className="primary self-start" onClick={() => setStartup('loading')}>Retry</button>
       </section> : !data ? <p role="status">Opening FitLog…</p> : tab !== 'Workouts' ?
         <section className="placeholder card stack">
-          <span className="feature-icon"><PlaceholderIcon size={29} /></span>
+          <span className="feature-icon placeholder-icon" aria-hidden="true">
+            <PlaceholderIcon size={30} /><Sparkles className="placeholder-sparkle" size={16} />
+          </span>
           <h1>{tab}</h1><span className="badge">Coming Soon</span><p>{activeTab.description}</p>
         </section> : editor.draft ?
           <WorkoutEditor key={editor.draft.id} workout={editor.draft} workouts={data.workouts}
@@ -113,8 +115,10 @@ export default function App() {
                 <h1>Workouts</h1>
               </div>
               <section className="hero">
-                <div className="hero-art" aria-hidden="true"><Dumbbell size={132} strokeWidth={1.15} /></div>
-                <span className="hero-icon"><Flame size={22} /></span>
+                <div className="hero-art" aria-hidden="true">
+                  <img src="/icon-192.png" width={104} height={104} alt="" />
+                  <Sparkles className="hero-sparkle" size={23} strokeWidth={1.5} />
+                </div>
                 <h2>{unfinished ? 'Pick up where you left off' : 'Ready to train?'}</h2>
                 <p>{unfinished ? (unfinished.name || unfinished.kind) + ' is in progress.' : 'Start a session and keep your last sets in reach.'}</p>
                 <div className="row wrap">
@@ -131,8 +135,8 @@ export default function App() {
               <section className="stack history-section">
                 <div className="row between"><h2>Workout history</h2><span className="count">{data.workouts.length}</span></div>
                 {!data.workouts.length && <div className="card empty">
-                  <span className="feature-icon"><ClipboardList size={24} /></span>
-                  <h3>No workouts yet</h3><p>Your sessions will appear here after you start logging.</p>
+                  <span className="feature-icon empty-icon" aria-hidden="true"><ClipboardList size={25} /></span>
+                  <h3>No workouts yet</h3><p>Your first logged workout will appear here.</p>
                 </div>}
                 {data.workouts.map(workout => <article className="card workout-row" key={workout.id}>
                   <button className="workout-link" onClick={() => open(workout)}>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Settings2, Trash2 } from 'lucide-react'
+import { Settings2, Sparkles, Trash2 } from 'lucide-react'
 import type { Exercise, SetEntry } from '../data/model'
 
 interface NumberFieldProps {
@@ -62,7 +62,7 @@ export function SetEditor({ set, index, exercise, update, remove, badges }: {
         set.plates ? 'Base ' + (set.plates.base ?? '—') + ' + plates ' + (set.plates.added ?? '—') + ' ' + set.unit : '',
         set.notes,
       ].filter(Boolean).join(' · ')}</p>}
-    {!!badges.length && <div className="set-meta">{badges.map(badge => <span className="badge" key={badge}>{badge}</span>)}</div>}
+    {!!badges.length && <div className="set-meta">{badges.map(badge => <span className="badge record-badge" key={badge}><Sparkles size={14} aria-hidden="true" />{badge}</span>)}</div>}
     {expanded && <div className="set-options">
       <div className="option-grid">
         <label className="field">Load type
