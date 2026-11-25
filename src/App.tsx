@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { BackupScreen } from './components/BackupScreen'
 import { NutritionScreen } from './components/nutrition/NutritionScreen'
+import { ProgressScreen } from './components/progress/ProgressScreen'
 import { WorkoutEditor } from './components/WorkoutEditor'
 import { db } from './data/db'
 import { workoutOrder } from './data/history'
@@ -17,7 +18,7 @@ const tabs = [
   { name: 'Workouts', icon: Dumbbell, description: '' },
   { name: 'Recipes', icon: Utensils, description: 'A place to keep the meals you want to make again.' },
   { name: 'Nutrition', icon: Salad, description: '' },
-  { name: 'Progress', icon: ChartNoAxesColumnIncreasing, description: 'A place to review what has changed across your workouts.' },
+  { name: 'Progress', icon: ChartNoAxesColumnIncreasing, description: '' },
 ] as const
 
 export default function App() {
@@ -33,6 +34,8 @@ export default function App() {
     }
   }, [])
   const [tab, setTab] = useState<(typeof tabs)[number]['name']>('Workouts')
+  const [progressOpened, setProgressOpened] = useState(false)
+  const [progressEditing, setProgressEditing] = useState(false)
   const [nutritionEditing, setNutritionEditing] = useState(false)
   const [nutritionOpened, setNutritionOpened] = useState(false)
   const [backup, setBackup] = useState(false)
@@ -74,6 +77,7 @@ export default function App() {
     setBackup(false)
     setStarting(false)
     if (next === 'Nutrition') setNutritionOpened(true)
+    if (next === 'Progress') setProgressOpened(true)
     setTab(next)
     window.scrollTo(0, 0)
   }
@@ -103,7 +107,7 @@ export default function App() {
       {startup === 'error' ? <section className="card stack">
         <h1>Local storage unavailable</h1><p>FitLog couldn’t open IndexedDB or recover a pending edit.</p>
         <button className="primary self-start" onClick={() => setStartup('loading')}>Retry</button>
-      </section> : !data ? <p role="status">Opening FitLog…</p> : tab === 'Nutrition' ? null : tab !== 'Workouts' ?
+      </section> : !data ? <p role="status">Opening FitLog…</p> : tab === 'Nutrition' || tab === 'Progress' ? null : tab !== 'Workouts' ?
         <section className="placeholder card stack">
           <span className="feature-icon placeholder-icon" aria-hidden="true">
             <PlaceholderIcon size={30} /><Sparkles className="placeholder-sparkle" size={16} />
@@ -157,13 +161,16 @@ export default function App() {
               {!recentExport && <button className="backup-reminder" onClick={() => setBackup(true)}>
                 <DatabaseBackup size={18} /> {data.lastExport ? 'Generate a fresh backup' : 'Back up your workout data'} <ChevronRight size={16} />
               </button>}
-              {updateReady && !unfinished && !nutritionEditing && <div className="row between card">
+              {updateReady && !unfinished && !nutritionEditing && !progressEditing && <div className="row between card">
                 <span>FitLog update available</span>
                 <button className="secondary" onClick={() => void updateServiceWorker(true)}>Reload to update</button>
               </div>}
             </div>}
       {data && nutritionOpened && <div hidden={tab !== 'Nutrition'}>
         <NutritionScreen today={today} onEditing={setNutritionEditing} />
+      </div>}
+      {data && progressOpened && <div hidden={tab !== 'Progress'}>
+        <ProgressScreen today={today} lastExport={data.lastExport} onEditing={setProgressEditing} />
       </div>}
     </main>
     <nav className="bottom" aria-label="Main navigation">

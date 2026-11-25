@@ -44,3 +44,6 @@ fitlog-backup-*.json
 *workout*export*.json
 *fitlog*export*.json
 *fitlog*dump*.json
+
+# Personal weight imports and exports
+*.csv

@@ -131,7 +131,7 @@ describe('migration and backups', () => {
     await db.workouts.add(workout)
     const entry = await saveLog(db, quick, undefined, food)
     const snapshot = await createBackup(db)
-    expect(snapshot.version).toBe(2)
+    expect(snapshot.version).toBe(3)
     expect(snapshot.counts).toMatchObject({ workouts: 1, foods: 1, foodLogs: 1 })
     await db.workouts.clear()
     await db.foodLogs.clear()

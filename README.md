@@ -1,6 +1,6 @@
 # FitLog
 
-FitLog is a mobile-first, installable workout and nutrition journal. Log sessions and review your previous sets in a blush-pink interface designed for use at the gym.
+FitLog is a mobile-first, installable workout, nutrition, and weight journal. Log sessions and review your previous sets in a blush-pink interface designed for use at the gym.
 
 ## Features
 
@@ -10,6 +10,8 @@ FitLog is a mobile-first, installable workout and nutrition journal. Log session
 - Review exercise history and personal records for comparable sets.
 - Log foods by meal, track daily calories and known nutrients, browse past dates, and copy earlier meals.
 - Save verified or estimated foods in a reusable personal library and scale nutrition by the amount eaten.
+- Track weigh-ins and rolling trends in a monthly logbook, with optional goals, milestones, and forecasts.
+- Import Happy Scale CSV files and export weight history in pounds or kilograms.
 - Export a JSON backup and preview a restore before confirming replacement.
 - Install FitLog as a web app and keep logging offline after the first online launch.
 
@@ -90,14 +92,38 @@ Open **Nutrition → Daily Log** to see the current day. Use the date controls t
 - **My Foods** lets you search, create, edit, favorite, duplicate, and delete foods. Entries hold their own nutrition snapshots, so changes to the library apply to future logging.
 - Daily and historical totals indicate when a nutrient is incomplete. The displayed value sums known amounts. Nutrition fields support both verified and estimated entries.
 
+## Track weight
+
+Open **Progress → Logbook** and tap the pink **+** button at the top right. FitLog supports a single weigh-in per local calendar date. If the date exists, it asks before replacing the entry. Open a Logbook row to edit its date, weight, or notes, or delete it.
+
+In **Settings**, choose pounds or kilograms, the recorded weight or moving average for tracking, and optional goals. Goal ranges use the upper edge for loss and lower edge for gain. Milestones step through multiples of your chosen increment and finish exactly at the goal boundary. The first and last segments can be shorter. Milestones are derived from the first recorded date on which each boundary was reached, so ordinary fluctuations do not remove achievements. Editing historical data or changing milestone rules can change the derived achievement dates. Maintain mode shows whether the tracking weight is within the configured goal or range.
+
+### Import and export Happy Scale CSV
+
+1. Choose **Progress → Settings → Import Happy Scale CSV**. Select a file or paste the CSV text with the header `Date,Recorded,Moving Average`.
+2. Select the file's original unit. Review the preview, including date range, duplicate dates, conflicts, and the number of supplied averages.
+3. Choose whether to keep existing entries or replace conflicting weigh-ins. You can use the earliest available weigh-in as your starting point. Confirm to import.
+
+Imports accept UTF-8 with an optional BOM, LF or CRLF, and quoted fields. Dates must use `YYYY-MM-DD`; blank moving averages are allowed. For duplicate dates inside a file, FitLog uses the last row. Imports use one record per date and leave unrelated records in place.
+
+CSV exports use the same header and identify the selected unit in the filename. They include the original imported average where available and a FitLog average otherwise. Use the complete JSON backup for notes, settings, and both trend values.
+
+### Calculation methods
+
+- **Units:** All calculations use kilograms internally at exactly 1 lb = 0.45359237 kg. Changing the display unit leaves stored values and milestone boundaries intact.
+- **Moving average:** Each imported moving average is preserved. For new or missing values, FitLog uses a time-aware exponential moving average with a seven-calendar-day half-life. After an imported value, the next FitLog calculation starts from that value. Historical edits flag affected imported averages. Use the recalculation option to switch those rows to FitLog averages while keeping the imported source values. This smoothing method is specific to FitLog.
+- **Weekly rate:** FitLog fits a least-squares line to active moving-average observations over the 28 calendar days through each weigh-in, then multiplies its daily slope by seven. The window must contain at least three observations spanning at least seven days. Current Rate uses this same calculation. Overall Rate measures change from the configured starting point to the latest tracking weight over the actual elapsed time.
+- **Weight trends:** Changes use the selected tracking weight and end on the latest weigh-in date. For 7, 30, or 90 days, FitLog uses an exact observation at the boundary when available or linearly interpolates between observations that bracket it. Without a bracket, the change is unavailable. All time compares the earliest and latest observations.
+- **Predictions:** Optional estimates project from the last weigh-in at a constant weekly rate. At least two entries and an active milestone are required. Zero rates, rates pointing away from the milestone, and projections beyond 100 years are excluded. Dates are displayed as estimates and anchored to the dated weigh-in used.
+
 ## Privacy and backups
 
-Workout data, custom exercises, foods, nutrition logs, and settings live in IndexedDB for the current browser and site origin. FitLog uses a small local recovery journal for pending edits. The project has no server-side workout storage or analytics. Publishing the repository or the Cloudflare Pages site publishes the app itself. Your records are stored in your browser.
+Workout data, custom exercises, foods, nutrition logs, weigh-ins, and settings live in IndexedDB for the current browser and site origin. FitLog uses a small local recovery journal for pending edits. The project has no server-side workout storage or analytics. Publishing the repository or the Cloudflare Pages site publishes the app itself. Your records are stored in your browser.
 
 Open **Workouts → Data & Backup → Generate backup**, then download the file or use **Share file** on supported devices. The displayed date records when FitLog generated the export. Keep a copy in a place you can access again, such as Files or iCloud Drive.
 
-Version 2 backups include both workouts and nutrition. Version 1 workout-only backups restore workout data and keep the current foods and diary. To restore a JSON backup, choose it under **Restore backup**, review the record counts, and confirm replacement. Export your current data first if you want to keep it. Use a backup when moving to a new device, browser, or URL, and before clearing website data.
+Version 3 backups include workouts, nutrition, weigh-ins, and weight settings. Version 1 and version 2 backups restore the categories they contain and keep weight data. Version 1 also keeps existing nutrition data. To restore a JSON backup, choose it under **Restore backup**, review the record counts, and confirm replacement. Export your current data first if you want to keep it. Use a backup when moving to a new device, browser, or URL, and before clearing website data.
 
 ## Roadmap
 
-Recipes and Progress are placeholders for planned recipe saving and workout trends.
+Recipes is a placeholder for planned recipe saving.
