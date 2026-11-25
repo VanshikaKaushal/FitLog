@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Plus } from 'lucide-react'
 import { db } from '../../data/db'
 import { getWeightData } from '../../data/weight/store'
 import type { WeightEntry } from '../../data/weight/model'
@@ -41,7 +42,11 @@ export function ProgressScreen({ today, lastExport, onEditing }: {
 
   const { entries, settings } = data
   return <div className="stack progress-screen">
-    <h1>Progress</h1>
+    <div className="row between progress-title">
+      <h1>Progress</h1>
+      {!panel && section === 'Logbook' && <button type="button" className="primary weight-add" aria-label="Add Weight"
+        onClick={() => show({ type: 'weigh-in' })}><Plus size={22} aria-hidden="true" /></button>}
+    </div>
     {!panel && <nav className="nutrition-segments" aria-label="Progress sections">
       {sections.map(item => <button key={item} aria-pressed={section === item}
         disabled={settingsEditing && section !== item} onClick={() => { setSection(item); setMessage('') }}>{item}</button>)}
@@ -56,7 +61,7 @@ export function ProgressScreen({ today, lastExport, onEditing }: {
       onEditing={editing => { setSettingsEditing(editing); onEditing(editing) }}
       openImport={() => show({ type: 'import' })} openBackup={() => show({ type: 'backup' })} />
     : section === 'Summary' ? <ProgressSummary entries={entries} settings={settings} today={today} />
-    : <WeightLogbook entries={entries} settings={settings} onAdd={() => show({ type: 'weigh-in' })}
+    : <WeightLogbook entries={entries} settings={settings}
       onEdit={entry => show({ type: 'weigh-in', entry })} />}
   </div>
 }

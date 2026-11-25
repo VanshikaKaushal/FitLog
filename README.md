@@ -8,7 +8,7 @@ FitLog is a mobile-first, installable workout, nutrition, and weight journal. Lo
 - Search the exercise library, create custom variations, and copy earlier sets into the current workout.
 - Log weight, repetitions, duration, assistance, bodyweight, plate breakdowns, and notes.
 - Review exercise history and personal records for comparable sets.
-- Log foods by meal, track daily calories and known nutrients, browse past dates, and copy earlier meals.
+- Log foods by meal, track daily calories and known nutrients, and browse past dates.
 - Save verified or estimated foods in a reusable personal library and scale nutrition by the amount eaten.
 - Track weigh-ins and rolling trends in a monthly logbook, with optional goals, milestones, and forecasts.
 - Import Happy Scale CSV files and export weight history in pounds or kilograms.
@@ -85,7 +85,7 @@ FitLog uses standalone display mode and prompts before applying an available upd
 
 ## Log nutrition
 
-Open **Nutrition → Daily Log** to see the current day. Use the date controls to open any diary, or browse **History** by month or across all logged days. Each meal has its own **Add food** and **Copy previous meal** actions.
+Open **Nutrition → Daily Log** to see the current day. Use the date controls to open any diary, or browse **History** by month or across all logged days. Tap the **+** beside a meal to log food for it.
 
 - **Quick Add** needs a food name and calories. Leave unknown nutrients blank and enter zero when it is known. You can save the entered values to My Foods as one serving.
 - **Saved Food** scales a reference serving in its recorded unit. **Recently Eaten** reuses the previous snapshot and amount, which you can change before logging. To use a different unit, enter a separate reference with values you can verify.
@@ -94,7 +94,7 @@ Open **Nutrition → Daily Log** to see the current day. Use the date controls t
 
 ## Track weight
 
-Open **Progress → Logbook** and tap the pink **+** button at the top right. FitLog supports a single weigh-in per local calendar date. If the date exists, it asks before replacing the entry. Open a Logbook row to edit its date, weight, or notes, or delete it.
+Open **Progress → Logbook** and tap the pink **+** button beside the **Progress** heading. FitLog supports a single weigh-in per local calendar date. If the date exists, it asks before replacing the entry. Open a Logbook row to edit its date, weight, or notes, or delete it.
 
 In **Settings**, choose pounds or kilograms, the recorded weight or moving average for tracking, and optional goals. Goal ranges use the upper edge for loss and lower edge for gain. Milestones step through multiples of your chosen increment and finish exactly at the goal boundary. The first and last segments can be shorter. Milestones are derived from the first recorded date on which each boundary was reached, so ordinary fluctuations do not remove achievements. Editing historical data or changing milestone rules can change the derived achievement dates. Maintain mode shows whether the tracking weight is within the configured goal or range.
 
@@ -123,7 +123,3 @@ Workout data, custom exercises, foods, nutrition logs, weigh-ins, and settings l
 Open **Workouts → Data & Backup → Generate backup**, then download the file or use **Share file** on supported devices. The displayed date records when FitLog generated the export. Keep a copy in a place you can access again, such as Files or iCloud Drive.
 
 Version 3 backups include workouts, nutrition, weigh-ins, and weight settings. Version 1 and version 2 backups restore the categories they contain and keep weight data. Version 1 also keeps existing nutrition data. To restore a JSON backup, choose it under **Restore backup**, review the record counts, and confirm replacement. Export your current data first if you want to keep it. Use a backup when moving to a new device, browser, or URL, and before clearing website data.
-
-## Roadmap
-
-Recipes is a placeholder for planned recipe saving.

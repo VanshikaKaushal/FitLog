@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CalendarDays, ChevronLeft, ChevronRight, Copy, Plus, Search, Star } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, Plus, Search, Star } from 'lucide-react'
 import { db } from '../../data/db'
 import { formatDate, localDate } from '../../data/model'
 import {
   formatNutrient, isCalendarDate, meals, nutrients, shiftDay, summarize,
   type Food, type FoodLogEntry, type Meal,
 } from '../../data/nutrition'
-import { copyMeal } from '../../data/nutritionStore'
 import { FoodEditor } from './FoodEditor'
 import { LogEditor } from './LogEditor'
 import { FoodSource } from './NutritionFields'
@@ -17,7 +16,6 @@ type Section = typeof sections[number]
 type Panel =
   | { type: 'log'; meal: Meal; entry?: FoodLogEntry; initialFood?: Food }
   | { type: 'food'; food?: Food; duplicate?: boolean }
-  | { type: 'copy'; meal: Meal }
 
 function DatePicker({ date, label, select }: { date: string; label: string; select: (date: string) => void }) {
   return <label className="field nutrition-calendar">
@@ -42,48 +40,6 @@ function DayTotals({ entries, compact = false }: { entries: FoodLogEntry[]; comp
       </div>)}
     </dl>
   </>
-}
-
-function CopyMealEditor({ meal, date, logs, onClose }: {
-  meal: Meal; date: string; logs: FoodLogEntry[]; onClose: () => void
-}) {
-  const [from, setFrom] = useState(meal)
-  const [selected, setSelected] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  const dates = [...new Set(logs.filter(entry => entry.date < date && entry.meal === from).map(entry => entry.date))]
-    .sort((a, b) => b.localeCompare(a))
-  const source = dates.includes(selected) ? selected : dates[0] ?? ''
-  const entries = logs.filter(entry => entry.date === source && entry.meal === from)
-
-  return <form className="card stack" onSubmit={async event => {
-    event.preventDefault()
-    if (!source || busy) return
-    setBusy(true)
-    try {
-      const count = await copyMeal(db, source, from, date, meal)
-      if (!count) throw new Error('No entries are available for that meal.')
-      onClose()
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Could not copy this meal.')
-    } finally { setBusy(false) }
-  }}>
-    <div className="row between wrap"><h2>Copy previous meal</h2>
-      <button className="text-button" type="button" disabled={busy} onClick={onClose}>Cancel</button>
-    </div>
-    <p>Copy entries into {meal.toLowerCase()} on {formatDate(date)}.</p>
-    <label className="field">Source meal<select disabled={busy} value={from} onChange={event => setFrom(event.target.value as Meal)}>
-      {meals.map(item => <option key={item}>{item}</option>)}
-    </select></label>
-    {dates.length ? <>
-      <label className="field">Source date<select disabled={busy} value={source} onChange={event => setSelected(event.target.value)}>
-        {dates.map(day => <option value={day} key={day}>{formatDate(day)}</option>)}
-      </select></label>
-      <p>{entries.length} {entries.length === 1 ? 'entry' : 'entries'} · {formatNutrient(summarize(entries).totals.calories, 'calories')} kcal</p>
-    </> : <p>There are no earlier entries for this meal.</p>}
-    {error && <p className="danger" role="alert">{error}</p>}
-    <button className="primary self-start" disabled={!source || busy}>Copy meal</button>
-  </form>
 }
 
 export function NutritionScreen({ today, onEditing }: { today: string; onEditing: (editing: boolean) => void }) {
@@ -174,7 +130,6 @@ export function NutritionScreen({ today, onEditing }: { today: string; onEditing
         show(null)
       }} />
     : panel?.type === 'food' ? <FoodEditor food={panel.food} duplicate={panel.duplicate} onClose={() => show(null)} />
-    : panel?.type === 'copy' ? <CopyMealEditor meal={panel.meal} date={date} logs={logs} onClose={() => show(null)} />
     : <>
       <nav aria-label="Nutrition sections" className="nutrition-segments">
         {sections.map(item => <button key={item} aria-pressed={section === item} onClick={() => setSection(item)}>{item}</button>)}
@@ -183,10 +138,7 @@ export function NutritionScreen({ today, onEditing }: { today: string; onEditing
         <section className="card stack">
           <div className="row between wrap">
             <h2>{date === today ? 'Today' : formatDate(date, { weekday: 'long', month: 'short', day: 'numeric' })}</h2>
-            <div className="row wrap">
-              {date !== today && <button className="text-button" onClick={() => openDate(today)}>Today</button>}
-              <button className="primary" onClick={() => show({ type: 'log', meal: 'Breakfast' })}><Plus size={17} /> Add food</button>
-            </div>
+            {date !== today && <button className="text-button" onClick={() => openDate(today)}>Today</button>}
           </div>
           <div className="nutrition-date">
             <button className="icon-button" aria-label="Previous day" onClick={() => openDate(shiftDay(date, -1))}><ChevronLeft size={20} /></button>
@@ -198,10 +150,10 @@ export function NutritionScreen({ today, onEditing }: { today: string; onEditing
         {meals.map(meal => {
           const mealEntries = entries.filter(entry => entry.meal === meal)
           return <section className="card stack nutrition-meal" key={meal}>
-            <div className="row between wrap"><div><h2>{meal}</h2>
+            <div className="row between"><div><h2>{meal}</h2>
               <p>{formatNutrient(summarize(mealEntries).totals.calories, 'calories')} kcal</p></div>
-              <button className="secondary" aria-label={'Add food to ' + meal.toLowerCase()} onClick={() => show({ type: 'log', meal })}>
-                <Plus size={16} /> Add food
+              <button type="button" className="icon-button" aria-label={'Add food to ' + meal.toLowerCase()} onClick={() => show({ type: 'log', meal })}>
+                <Plus size={22} aria-hidden="true" />
               </button>
             </div>
             {mealEntries.map(entry => <button className="nutrition-entry" key={entry.id} onClick={() => show({ type: 'log', meal, entry })}>
@@ -209,9 +161,6 @@ export function NutritionScreen({ today, onEditing }: { today: string; onEditing
                 ? entry.quantity + ' ' + entry.unit : entry.description || 'Quick add'}</small></span>
               <span>{formatNutrient(entry.nutrition.calories, 'calories')} kcal</span><ChevronRight size={17} />
             </button>)}
-            {!mealEntries.length && <p>No foods logged.</p>}
-            <button className="text-button self-start" aria-label={'Copy previous meal into ' + meal.toLowerCase()}
-              onClick={() => show({ type: 'copy', meal })}><Copy size={16} /> Copy previous meal</button>
           </section>
         })}
       </>}

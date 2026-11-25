@@ -1,7 +1,7 @@
 import type { FitLogDatabase } from './db'
 import {
   isCalendarDate, isQuantity, meals, scaledNutrition, units, validNutrition,
-  type Food, type FoodDraft, type FoodLogEntry, type LogDraft, type Meal,
+  type Food, type FoodDraft, type FoodLogEntry, type LogDraft,
 } from './nutrition'
 
 function validateFood(draft: FoodDraft) {
@@ -46,19 +46,4 @@ export async function saveLog(db: FitLogDatabase, draft: LogDraft, id?: string, 
 
 export function getDay(db: FitLogDatabase, date: string) {
   return db.foodLogs.where('date').equals(date).sortBy('createdAt')
-}
-
-export async function copyMeal(db: FitLogDatabase, source: string, from: Meal, target: string, to: Meal) {
-  if (!isCalendarDate(source) || !isCalendarDate(target) || source >= target) {
-    throw new Error('Choose an earlier date to copy from.')
-  }
-  return db.transaction('rw', db.foodLogs, async () => {
-    const entries = await db.foodLogs.where('[date+meal]').equals([source, from]).toArray()
-    const now = new Date().toISOString()
-    const copies = entries.map(entry => ({
-      ...entry, id: crypto.randomUUID(), date: target, meal: to, createdAt: now, updatedAt: now,
-    }))
-    await db.foodLogs.bulkAdd(copies)
-    return copies.length
-  })
 }

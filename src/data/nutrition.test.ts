@@ -5,7 +5,7 @@ import { createBackup, restoreBackup, validateBackup } from './backup'
 import { FitLogDatabase, workoutStore } from './db'
 import { newWorkout } from './model'
 import { scaledNutrition, shiftDay, summarize, type FoodDraft, type LogDraft } from './nutrition'
-import { copyMeal, getDay, saveFood, saveLog } from './nutritionStore'
+import { getDay, saveFood, saveLog } from './nutritionStore'
 
 const food: FoodDraft = {
   name: 'Test yogurt', brand: 'Test kitchen', category: 'Dairy', notes: '', source: 'Test label',
@@ -82,19 +82,6 @@ describe('the diary and library', () => {
     expect(summary.incomplete).toEqual(new Set(['carbs', 'fat', 'fiber']))
     expect(summary.known.has('carbs')).toBe(true)
     expect(summary.known.has('fiber')).toBe(false)
-  })
-
-  it('copies an earlier meal as independent entries', async () => {
-    const original = await saveLog(db, quick)
-    await saveLog(db, { ...quick, meal: 'Lunch' })
-    expect(await copyMeal(db, quick.date, 'Breakfast', '2026-03-10', 'Dinner')).toBe(1)
-    const [copy] = await getDay(db, '2026-03-10')
-    expect(copy.id).not.toBe(original.id)
-    expect(copy.meal).toBe('Dinner')
-    expect(copy.nutrition).toEqual(original.nutrition)
-    await saveLog(db, { ...copy, nutrition: { ...copy.nutrition, calories: 155 } }, copy.id)
-    expect(await db.foodLogs.get(original.id)).toEqual(original)
-    await expect(copyMeal(db, '2026-03-10', 'Dinner', quick.date, 'Lunch')).rejects.toThrow('earlier')
   })
 
   it('saves a quick entry and reusable food in one operation and rejects invalid input', async () => {
