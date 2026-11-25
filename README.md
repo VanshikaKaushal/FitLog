@@ -1,6 +1,6 @@
 # FitLog
 
-FitLog is a mobile-first, installable workout journal. Log sessions and review your previous sets in a blush-pink interface designed for use at the gym.
+FitLog is a mobile-first, installable workout and nutrition journal. Log sessions and review your previous sets in a blush-pink interface designed for use at the gym.
 
 ## Features
 
@@ -8,6 +8,8 @@ FitLog is a mobile-first, installable workout journal. Log sessions and review y
 - Search the exercise library, create custom variations, and copy earlier sets into the current workout.
 - Log weight, repetitions, duration, assistance, bodyweight, plate breakdowns, and notes.
 - Review exercise history and personal records for comparable sets.
+- Log foods by meal, track daily calories and known nutrients, browse past dates, and copy earlier meals.
+- Save verified or estimated foods in a reusable personal library and scale nutrition by the amount eaten.
 - Export a JSON backup and preview a restore before confirming replacement.
 - Install FitLog as a web app and keep logging offline after the first online launch.
 
@@ -79,14 +81,23 @@ FitLog uses standalone display mode and prompts before applying an available upd
 
 [Apple’s iPhone web app installation instructions](https://support.apple.com/guide/iphone/open-as-web-app-iphea86e5236/ios)
 
+## Log nutrition
+
+Open **Nutrition → Daily Log** to see the current day. Use the date controls to open any diary, or browse **History** by month or across all logged days. Each meal has its own **Add food** and **Copy previous meal** actions.
+
+- **Quick Add** needs a food name and calories. Leave unknown nutrients blank and enter zero when it is known. You can save the entered values to My Foods as one serving.
+- **Saved Food** scales a reference serving in its recorded unit. **Recently Eaten** reuses the previous snapshot and amount, which you can change before logging. To use a different unit, enter a separate reference with values you can verify.
+- **My Foods** lets you search, create, edit, favorite, duplicate, and delete foods. Entries hold their own nutrition snapshots, so changes to the library apply to future logging.
+- Daily and historical totals indicate when a nutrient is incomplete. The displayed value sums known amounts. Nutrition fields support both verified and estimated entries.
+
 ## Privacy and backups
 
-Workout data, custom exercises, and settings live in IndexedDB for the current browser and site origin. FitLog uses a small local recovery journal for pending edits. The project has no server-side workout storage or analytics. Publishing the repository or the Cloudflare Pages site publishes the app itself. Your records are stored in your browser.
+Workout data, custom exercises, foods, nutrition logs, and settings live in IndexedDB for the current browser and site origin. FitLog uses a small local recovery journal for pending edits. The project has no server-side workout storage or analytics. Publishing the repository or the Cloudflare Pages site publishes the app itself. Your records are stored in your browser.
 
 Open **Workouts → Data & Backup → Generate backup**, then download the file or use **Share file** on supported devices. The displayed date records when FitLog generated the export. Keep a copy in a place you can access again, such as Files or iCloud Drive.
 
-To restore a JSON backup, choose it under **Restore backup**, review the record counts, and confirm replacement. Export your current data first if you want to keep it. Use a backup when moving to a new device, browser, or URL, and before clearing website data.
+Version 2 backups include both workouts and nutrition. Version 1 workout-only backups restore workout data and keep the current foods and diary. To restore a JSON backup, choose it under **Restore backup**, review the record counts, and confirm replacement. Export your current data first if you want to keep it. Use a backup when moving to a new device, browser, or URL, and before clearing website data.
 
 ## Roadmap
 
-Recipes, Nutrition, and Progress are placeholders for planned recipe saving, food logging, and workout trends.
+Recipes and Progress are placeholders for planned recipe saving and workout trends.

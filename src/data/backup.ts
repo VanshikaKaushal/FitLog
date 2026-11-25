@@ -1,14 +1,33 @@
 import { type FitLogDatabase, type Setting } from './db'
 import { kinds, localDate, type Kind, type Exercise, type Workout } from './model'
 
+import {
+  isCalendarDate, isQuantity, meals, units, validNutrition,
+  type Food, type FoodLogEntry, type Meal, type Unit,
+} from './nutrition'
+
 type BackupData = { workouts: Workout[]; exercises: Exercise[]; settings: Setting[] }
 
-export interface Backup extends BackupData {
+interface BackupHeader extends BackupData {
   format: 'fitlog-backup'
-  version: 1
   exportedAt: string
-  counts: { workouts: number; exercises: number; sets: number }
 }
+
+type WorkoutCounts = { workouts: number; exercises: number; sets: number }
+
+interface WorkoutBackup extends BackupHeader {
+  version: 1
+  counts: WorkoutCounts
+}
+
+interface FullBackup extends BackupHeader {
+  version: 2
+  foods: Food[]
+  foodLogs: FoodLogEntry[]
+  counts: WorkoutCounts & { foods: number; foodLogs: number }
+}
+
+export type Backup = WorkoutBackup | FullBackup
 
 function counts(data: BackupData) {
   return {
@@ -19,8 +38,8 @@ function counts(data: BackupData) {
   }
 }
 
-export async function createBackup(db: FitLogDatabase): Promise<Backup> {
-  return db.transaction('rw', db.workouts, db.exercises, db.settings, async () => {
+export async function createBackup(db: FitLogDatabase): Promise<FullBackup> {
+  return db.transaction('rw', [db.workouts, db.exercises, db.settings, db.foods, db.foodLogs], async () => {
     const exportedAt = new Date().toISOString()
     await db.settings.put({ key: 'lastExport', value: exportedAt })
     const data = {
@@ -28,7 +47,12 @@ export async function createBackup(db: FitLogDatabase): Promise<Backup> {
       exercises: await db.exercises.toArray(),
       settings: await db.settings.toArray(),
     }
-    return { format: 'fitlog-backup', version: 1, exportedAt, ...data, counts: counts(data) }
+    const foods = await db.foods.toArray()
+    const foodLogs = await db.foodLogs.toArray()
+    return {
+      format: 'fitlog-backup', version: 2, exportedAt, ...data, foods, foodLogs,
+      counts: { ...counts(data), foods: foods.length, foodLogs: foodLogs.length },
+    }
   })
 }
 
@@ -53,7 +77,7 @@ function unique(value: unknown, registry: Set<string>) {
 export function validateBackup(value: unknown): Backup {
   const invalid = () => { throw new Error('This backup contains missing, invalid, or duplicate records.') }
   if (!object(value) || value.format !== 'fitlog-backup') throw new Error('Choose a FitLog JSON backup.')
-  if (value.version !== 1) throw new Error('This backup version is unsupported.')
+  if (value.version !== 1 && value.version !== 2) throw new Error('This backup version is unsupported.')
   if (!timestamp(value.exportedAt) || !object(value.counts) ||
     !Array.isArray(value.workouts) || !Array.isArray(value.exercises) || !Array.isArray(value.settings)) {
     throw invalid()
@@ -97,15 +121,46 @@ export function validateBackup(value: unknown): Backup {
     if (!object(setting) || setting.key !== 'lastExport' || !unique(setting.key, settingKeys) ||
       !timestamp(setting.value)) throw invalid()
   }
-  const backup = value as unknown as Backup
-  const actual = counts(backup)
-  if (Object.entries(actual).some(([key, count]) => backup.counts[key as keyof typeof actual] !== count)) throw invalid()
-  return backup
+  const workoutCounts = counts(value as unknown as BackupData)
+  const reported = value.counts
+  if (Object.entries(workoutCounts).some(([key, count]) => reported[key] !== count)) throw invalid()
+
+  if (value.version === 2) {
+    if (!Array.isArray(value.foods) || !Array.isArray(value.foodLogs)
+        || reported.foods !== value.foods.length || reported.foodLogs !== value.foodLogs.length) throw invalid()
+    const foodIds = new Set<string>()
+    const logIds = new Set<string>()
+    for (const food of value.foods) {
+      if (!object(food) || !unique(food.id, foodIds) || !nonempty(food.name) || !string(food.brand)
+          || !string(food.category) || !nutritionMetadata(food) || !serving(food.serving)
+          || typeof food.favorite !== 'boolean') throw invalid()
+    }
+    for (const entry of value.foodLogs) {
+      if (!object(entry) || !unique(entry.id, logIds) || !nonempty(entry.name) || !isCalendarDate(entry.date)
+          || !meals.includes(entry.meal as Meal) || !(entry.foodId === null || nonempty(entry.foodId))
+          || !string(entry.description) || !nutritionMetadata(entry) || !validNutrition(entry.nutrition)
+          || !(entry.quantity === null || isQuantity(entry.quantity))
+          || !(entry.unit === null || (units.includes(entry.unit as Unit) && isQuantity(entry.quantity)))
+          || !(entry.reference === null || (serving(entry.reference) && isQuantity(entry.quantity)
+            && entry.unit === entry.reference.unit))
+          || !timestamp(entry.createdAt) || !timestamp(entry.updatedAt)) throw invalid()
+    }
+  }
+  return value as unknown as Backup
+}
+
+function nutritionMetadata(value: Record<string, unknown>) {
+  return string(value.source) && string(value.notes) && typeof value.verified === 'boolean'
+}
+
+function serving(value: unknown): value is Record<string, unknown> {
+  return object(value) && isQuantity(value.quantity) && units.includes(value.unit as Unit)
+    && validNutrition(value.nutrition)
 }
 
 export async function restoreBackup(db: FitLogDatabase, input: unknown) {
   const backup = validateBackup(input)
-  await db.transaction('rw', db.exercises, db.workouts, db.settings, async () => {
+  await db.transaction('rw', [db.exercises, db.workouts, db.settings, db.foods, db.foodLogs], async () => {
     const localExport = await db.settings.get('lastExport')
     await db.workouts.clear()
     await db.exercises.clear()
@@ -113,6 +168,12 @@ export async function restoreBackup(db: FitLogDatabase, input: unknown) {
     await db.exercises.bulkAdd(backup.exercises)
     await db.workouts.bulkAdd(backup.workouts)
     await db.settings.bulkAdd(backup.settings)
+    if (backup.version === 2) {
+      await db.foodLogs.clear()
+      await db.foods.clear()
+      await db.foods.bulkAdd(backup.foods)
+      await db.foodLogs.bulkAdd(backup.foodLogs)
+    }
     const restoredExport = backup.settings.find(setting => setting.key === 'lastExport')
     if (localExport && (!restoredExport || localExport.value > restoredExport.value)) await db.settings.put(localExport)
   })

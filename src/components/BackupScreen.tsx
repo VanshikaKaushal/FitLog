@@ -34,10 +34,10 @@ export function BackupScreen({ lastExport, back }: { lastExport?: string; back: 
 
   return <div className="stack">
     <button className="text-button self-start" onClick={back} disabled={busy}>Back to workouts</button>
-    <div><h1>Data &amp; Backup</h1><p>Your workouts are stored on this device.</p></div>
+    <div><h1>Data &amp; Backup</h1><p>Your workouts and nutrition data are stored on this device.</p></div>
     {(status || error) && <p className={error ? 'card error' : 'card'} role={error ? 'alert' : 'status'}>{error || status}</p>}
     <section className="card stack">
-      <div><h2>Export backup</h2><p>Keep a JSON copy of your workouts, exercise library, and settings.</p></div>
+      <div><h2>Export backup</h2><p>Keep a JSON copy of your workouts, foods, nutrition logs, and settings.</p></div>
       <p>{lastExport ? 'Last generated · ' + new Date(lastExport).toLocaleString() : 'No backup generated yet.'}</p>
       <button className="primary self-start" disabled={busy} onClick={() => void run(generate, 'Could not generate a backup.')}>
         <Download size={18} /> Generate backup
@@ -70,12 +70,17 @@ export function BackupScreen({ lastExport, back }: { lastExport?: string; back: 
       </label>
       {preview && <div className="previous stack">
         <strong>{preview.counts.workouts} workouts · {preview.counts.exercises} exercises · {preview.counts.sets} sets</strong>
+        {preview.version === 2
+          ? <p>{preview.counts.foods} saved foods · {preview.counts.foodLogs} food log entries</p>
+          : <p>This workout-only backup contains no nutrition records. Your current foods and nutrition logs will be kept.</p>}
         <p>Generated {new Date(preview.exportedAt).toLocaleString()}</p>
         <button className="secondary self-start" disabled={busy} onClick={() => void run(generate, 'Could not generate a backup.')}>
           Export current data first
         </button>
         <label className="check"><input type="checkbox" checked={confirmed} disabled={busy}
-          onChange={event => setConfirmed(event.target.checked)} /> Replace all local workouts and exercises</label>
+          onChange={event => setConfirmed(event.target.checked)} /> {preview.version === 2
+            ? 'Replace local workouts, exercises, saved foods, and nutrition logs'
+            : 'Replace local workouts and exercises'}</label>
         <button className="primary self-start" disabled={!confirmed || busy} onClick={() => void run(async () => {
           await restoreBackup(db, preview)
           setPreview(null)

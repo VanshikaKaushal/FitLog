@@ -110,7 +110,7 @@ describe('backups and migration', () => {
     const custom = { ...cable, id: crypto.randomUUID(), name: 'Custom variation' }
     await db.exercises.add(custom)
     const backup = validateBackup(JSON.parse(JSON.stringify(await createBackup(db))))
-    expect(backup.counts).toEqual({ workouts: 1, exercises: starterExercises.length + 1, sets: 3 })
+    expect(backup.counts).toEqual({ workouts: 1, exercises: starterExercises.length + 1, sets: 3, foods: 0, foodLogs: 0 })
     const target = new FitLogDatabase('fitlog-restore-' + crypto.randomUUID())
     try {
       await target.workouts.add(fixture('2026-11-25'))
@@ -126,7 +126,7 @@ describe('backups and migration', () => {
     const original = fixture()
     await db.workouts.add(original)
     const backup = await createBackup(db)
-    await expect(restoreBackup(db, { ...backup, version: 2 })).rejects.toThrow('unsupported')
+    await expect(restoreBackup(db, { ...backup, version: 999 })).rejects.toThrow('unsupported')
     await expect(restoreBackup(db, { ...backup, workouts: null })).rejects.toThrow('invalid')
     const missing = structuredClone(backup)
     missing.workouts[0].exercises[0].exerciseId = 'missing'
@@ -150,7 +150,7 @@ describe('backups and migration', () => {
       expect(await migrated.workouts.get(original.id)).toEqual(original)
       expect(await migrated.exercises.get(cable.id)).toEqual(cable)
       expect(await migrated.settings.count()).toBe(0)
-      expect(migrated.verno).toBe(2)
+      expect(migrated.verno).toBe(3)
     } finally { await migrated.delete() }
   })
 })
